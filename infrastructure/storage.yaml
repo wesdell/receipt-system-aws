@@ -60,7 +60,7 @@ Resources:
           Value: s3
         - Key: purpose
           Value: receipts
-  # S3 bucket --> stores uploaded receipts (PDFs, photos)
+  # S3 bucket --> hosts the frontend dashboard
   FrontendBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
