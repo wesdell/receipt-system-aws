@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "S3 buckets for receipts and frontend"
+
+Parameters:
+  Owner:
+    Type: String
+    Default: w
+    Description: Owner prefix
+
+  Project:
+    Type: String
+    Default: rs
+    Description: Project prefix
+
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [ dev, staging, prod ]
+    Description: Deployment Envorinment
+
+Resources:
+  # S3 bucket --> stores uploaded receipts (PDFs, photos)
+  ReceiptsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub "${Owner}-${Project}-${Environment}-s3-receipts"
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - POST
+              - PUT
+            AllowedOrigins:
+              - "*"
+            MaxAge: 3000
+      LifecycleConfiguration:
+        Rules:
+          - Id: CleanupIncompleteUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+      Tags:
+        - Key: owner
+          Value: !Ref Owner
+        - Key: project
+          Value: !Ref Project
+        - Key: env
+          Value: !Ref Environment
+        - Key: service
+          Value: s3
+        - Key: purpose
+          Value: receipts
+  # S3 bucket --> stores uploaded receipts (PDFs, photos)
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub "${Owner}-${Project}-${Environment}-s3-frontend-hosting"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: owner
+          Value: !Ref Owner
+        - Key: project
+          Value: !Ref Project
+        - Key: env
+          Value: !Ref Environment
+        - Key: service
+          Value: s3
+        - Key: purpose
+          Value: frontend-hosting
+
+Outputs:
+  ReceiptsBucketName:
+    Description: Name of the S3 bucket that stores receipt files
+    Value: !Ref ReceiptsBucket
+    Export:
+      Name: !Sub "${Owner}-${Project}-${Environment}-receipts-bucket-name"
+  ReceiptsBucketArn:
+    Description: "ARN of the receipts S3 bucket"
+    Value: !GetAtt ReceiptsBucket.Arn
+    Export:
+      Name: !Sub "${Owner}-${Project}-${Environment}-receipts-bucket-arn"
+  FrontendBucketName:
+    Description: "Name of the S3 bucket that hosts the frontend"
+    Value: !Ref FrontendBucket
+    Export:
+      Name: !Sub "${Owner}-${Project}-${Environment}-frontend-bucket-name"
+  FrontendBucketArn:
+    Description: "ARN of the frontend S3 bucket"
+    Value: !GetAtt FrontendBucket.Arn
+    Export:
+      Name: !Sub "${Owner}-${Project}-${Environment}-frontend-bucket-arn"
