@@ -15,8 +15,6 @@ Parameters:
   Environment:
     Type: String
     Default: dev
-    AllowedValues: [ dev, staging, prod ]
-    Description: Deployment Envorinment
 
 Resources:
   # S3 bucket --> stores uploaded receipts (PDFs, photos)

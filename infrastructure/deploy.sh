@@ -5,9 +5,10 @@
 # Deploys all CloudFormation stacks in the correct order.
 #
 # Usage:
-#   ./deploy.sh            → deploy all stacks
-#   ./deploy.sh storage    → deploy only the specified stack
-#   ./deploy.sh teardown   → DELETE all stacks and resources
+#   ./deploy.sh                → deploy all stacks
+#   ./deploy.sh storage        → deploy only the storage stack
+#   ./deploy.sh roles          → deploy only the roles stack
+#   ./deploy.sh teardown       → DELETE all stacks and resources
 # ─────────────────────────────────────────────────────────────────
 
 set -e  # Exit immediately if any command fails
@@ -20,6 +21,7 @@ ENV="dev"
 
 # Stack names follow the same naming convention as resources
 STACK_STORAGE="${OWNER}-${PROJECT}-${ENV}-stack-storage"
+STACK_ROLES="${OWNER}-${PROJECT}-${ENV}-stack-roles"
 
 # ── Color output helpers ───────────────────────────────────────────
 GREEN='\033[0;32m'
@@ -108,6 +110,7 @@ teardown() {
 
   # Delete in reverse order (dependents first)
   local STACKS=(
+    $STACK_ROLES
     $STACK_STORAGE
   )
 
@@ -179,6 +182,11 @@ case "${1:-all}" in
     print_outputs "$STACK_STORAGE"
     ;;
 
+  roles)
+    deploy_stack "$STACK_ROLES" "permissions.yaml"
+    print_outputs "$STACK_ROLES"
+    ;;
+
   # ── Delete everything ─────────────────────────────────────────
   teardown)
     teardown
@@ -190,6 +198,7 @@ case "${1:-all}" in
     echo ""
 
     deploy_stack "$STACK_STORAGE"      "storage.yaml"
+    deploy_stack "$STACK_ROLES"        "permissions.yaml"
 
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     log_success "All stacks deployed successfully!"
@@ -202,7 +211,7 @@ case "${1:-all}" in
 
   *)
     log_error "Unknown argument: $1"
-    echo "Usage: ./deploy.sh [storage|teardown|all]"
+    echo "Usage: ./deploy.sh [storage|roles|teardown|all]"
     exit 1
     ;;
 
