@@ -1,0 +1,277 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Roles and permissions for all services"
+
+Parameters:
+  Owner:
+    Type: String
+    Default: w
+    Description: Owner prefix
+
+  Project:
+    Type: String
+    Default: rs
+    Description: Project prefix
+
+  Environment:
+    Type: String
+    Default: dev
+
+Resources:
+  # Policy
+  LambdaCloudWatchLogs:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${Owner}-${Project}-${Environment}-policy-cloudwatch-logs"
+      Description: "Allow Lambda to write logs to CloudWatch"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowLambdaLogging
+            Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: !Sub >
+              arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${Owner}-${Project}-${Environment}-*:*
+  # Policy
+  LambdaReadS3Receipts:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${Owner}-${Project}-${Environment}-policy-s3-read-receipts"
+      Description: "Allow Lambda to read receipt files from S3 bucket"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowGetReceiptObjects
+            Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource:
+              Fn::Sub:
+                - "${BucketArn}/*"
+                - BucketArn:
+                    Fn::ImportValue: !Sub "${Owner}-${Project}-${Environment}-receipts-bucket-arn"
+  # Policy
+  S3PresignedUrl:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${Owner}-${Project}-${Environment}-policy-s3-presigned-url"
+      Description: "Allow generating presigned PUT URLs for the receipts bucket"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowPutReceiptObjects
+            Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource:
+              Fn::Sub:
+                - "${BucketArn}/*"
+                - BucketArn:
+                    Fn::ImportValue: !Sub "${Owner}-${Project}-${Environment}-receipts-bucket-arn"
+  # Policy
+  LambdaSendFilesTextract:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${Owner}-${Project}-${Environment}-policy-textract"
+      Description: "Allow calling Textract to extract text from receipt images"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowTextractOCR
+            Effect: Allow
+            Action:
+              - textract:DetectDocumentText
+              - textract:AnalyzeDocument
+            Resource: "*"
+  # Policy
+  LambdaCallBedrock:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${Owner}-${Project}-${Environment}-policy-bedrock"
+      Description: "Allow invoking Claude Sonnet via Amazon Bedrock"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowBedrockInvoke
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+            Resource: "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-5"
+  # Policy
+  LambdaWriteDynamoDB:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${Owner}-${Project}-${Environment}-policy-dynamo-write"
+      Description: "Allow writing new receipt records to DynamoDB"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowDynamoWrite
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource: !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Owner}-${Project}-${Environment}-dynamo-receipts"
+  # Policy
+  LambdaReadUpdateDynamoDB:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${Owner}-${Project}-${Environment}-policy-dynamo-crud"
+      Description: "Allow reading and updating receipt records in DynamoDB"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowDynamoCrud
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Query
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+            Resource:
+              - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Owner}-${Project}-${Environment}-dynamo-receipts"
+              - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Owner}-${Project}-${Environment}-dynamo-receipts/index/*"
+  # Policy
+  LambdaInvokeLambdaParser:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${Owner}-${Project}-${Environment}-policy-lambda-invoke-parser"
+      Description: "Allow reader Lambda to invoke the parser Lambda"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowInvokeParser
+            Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${Owner}-${Project}-${Environment}-lambda-parser"
+  RoleReader:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${Owner}-${Project}-${Environment}-iam-role-reader"
+      Description: "Role for the Lambda reader Lambda S3 read, Textract, invoke parser"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref LambdaCloudWatchLogs
+        - !Ref LambdaReadS3Receipts
+        - !Ref LambdaSendFilesTextract
+        - !Ref LambdaInvokeLambdaParser
+      Tags:
+        - Key: owner
+          Value: !Ref Owner
+        - Key: project
+          Value: !Ref Project
+        - Key: env
+          Value: !Ref Environment
+        - Key: service
+          Value: iam
+        - Key: purpose
+          Value: role-reader
+  RoleParser:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${Owner}-${Project}-${Environment}-iam-role-parser"
+      Description: "Role for the Lambda parser, Lambda S3 read, Bedrock, DynamoDB write"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref LambdaCloudWatchLogs
+        - !Ref LambdaReadS3Receipts
+        - !Ref LambdaCallBedrock
+        - !Ref LambdaWriteDynamoDB
+      Tags:
+        - Key: owner
+          Value: !Ref Owner
+        - Key: project
+          Value: !Ref Project
+        - Key: env
+          Value: !Ref Environment
+        - Key: service
+          Value: iam
+        - Key: purpose
+          Value: role-parser
+  RoleS3Url:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${Owner}-${Project}-${Environment}-iam-role-s3url"
+      Description: "Role for the s3url, Lambda generate presigned upload URLs"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref LambdaCloudWatchLogs
+        - !Ref S3PresignedUrl
+      Tags:
+        - Key: owner
+          Value: !Ref Owner
+        - Key: project
+          Value: !Ref Project
+        - Key: env
+          Value: !Ref Environment
+        - Key: service
+          Value: iam
+        - Key: purpose
+          Value: role-s3url
+  RoleCrud:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${Owner}-${Project}-${Environment}-iam-role-crud"
+      Description: "Role for the crud Lambda, DynamoDB read, update, delete"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref LambdaCloudWatchLogs
+        - !Ref LambdaReadUpdateDynamoDB
+      Tags:
+        - Key: owner
+          Value: !Ref Owner
+        - Key: project
+          Value: !Ref Project
+        - Key: env
+          Value: !Ref Environment
+        - Key: service
+          Value: iam
+        - Key: purpose
+          Value: role-crud
+Outputs:
+  RoleReaderArn:
+    Description: "ARN of the reader Lambda IAM role"
+    Value: !GetAtt RoleReader.Arn
+    Export:
+      Name: !Sub "${Owner}-${Project}-${Environment}-iam-role-reader-arn"
+  RoleParserArn:
+    Description: "ARN of the parser Lambda IAM role"
+    Value: !GetAtt RoleParser.Arn
+    Export:
+      Name: !Sub "${Owner}-${Project}-${Environment}-iam-role-parser-arn"
+  RoleS3UrlArn:
+    Description: "ARN of the s3url Lambda IAM role"
+    Value: !GetAtt RoleS3Url.Arn
+    Export:
+      Name: !Sub "${Owner}-${Project}-${Environment}-iam-role-s3url-arn"
+  RoleCrudArn:
+    Description: "ARN of the crud Lambda IAM role"
+    Value: !GetAtt RoleCrud.Arn
+    Export:
+      Name: !Sub "${Owner}-${Project}-${Environment}-iam-role-crud-arn"
