@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "w-rs | Database layer | DynamoDB table for structured receipt data"
+Description: "DynamoDB table for structured receipt data"
 
 Parameters:
   Owner:
