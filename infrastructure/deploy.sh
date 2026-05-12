@@ -7,7 +7,8 @@
 # Usage:
 #   ./deploy.sh                → deploy all stacks
 #   ./deploy.sh storage        → deploy only the storage stack
-#   ./deploy.sh storage        → deploy only the storage stack
+#   ./deploy.sh database       → deploy only the database stack
+#   ./deploy.sh auth           → deploy only the auth stack
 #   ./deploy.sh roles          → deploy only the roles stack
 #   ./deploy.sh teardown       → DELETE all stacks and resources
 # ─────────────────────────────────────────────────────────────────
@@ -23,6 +24,7 @@ ENV="dev"
 # Stack names follow the same naming convention as resources
 STACK_STORAGE="${OWNER}-${PROJECT}-${ENV}-stack-storage"
 STACK_DATABASE="${OWNER}-${PROJECT}-${ENV}-stack-database"
+STACK_AUTH="${OWNER}-${PROJECT}-${ENV}-stack-auth"
 STACK_ROLES="${OWNER}-${PROJECT}-${ENV}-stack-roles"
 
 # ── Color output helpers ───────────────────────────────────────────
@@ -112,8 +114,9 @@ teardown() {
 
   # Delete in reverse order (dependents first)
   local STACKS=(
-    $STACK_DATABASE
     $STACK_ROLES
+    $STACK_AUTH
+    $STACK_DATABASE
     $STACK_STORAGE
   )
 
@@ -190,6 +193,11 @@ case "${1:-all}" in
     print_outputs "$STACK_DATABASE"
     ;;
 
+  auth)
+    deploy_stack "$STACK_AUTH" "auth.yaml"
+    print_outputs "$STACK_AUTH"
+    ;;
+
   roles)
     deploy_stack "$STACK_ROLES" "permissions.yaml"
     print_outputs "$STACK_ROLES"
@@ -207,6 +215,7 @@ case "${1:-all}" in
 
     deploy_stack "$STACK_STORAGE"      "storage.yaml"
     deploy_stack "$STACK_DATABASE"     "database.yaml"
+    deploy_stack "$STACK_AUTH"         "auth.yaml"
     deploy_stack "$STACK_ROLES"        "permissions.yaml"
 
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -217,12 +226,13 @@ case "${1:-all}" in
     log_info "Final outputs from all stacks:"
     print_outputs "$STACK_STORAGE"
     print_outputs "$STACK_DATABASE"
+    print_outputs "$STACK_AUTH"
     print_outputs "$STACK_ROLES"
     ;;
 
   *)
     log_error "Unknown argument: $1"
-    echo "Usage: ./deploy.sh [storage|database|roles|teardown|all]"
+    echo "Usage: ./deploy.sh [storage|database|auth|roles|teardown|all]"
     exit 1
     ;;
 
