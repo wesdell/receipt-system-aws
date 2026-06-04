@@ -9,6 +9,8 @@ This is an application where users their receipts and get a detailed breakdown o
 - [How to run this project](#how-to-run-this-project)
 - [Set up AWS](#set-up-aws)
   - [Amazon Cognito](#amazon-cognito)
+  - [S3](#s3)
+  - [CloudFront](#cloudfront)
 
 ## How to run this project
 
@@ -22,13 +24,13 @@ For this project every single AWS resource must be created in the **us-east-1** 
 
 Navigate to **Amazon Cognito** -> **User Pools**, and _Create user pool_.
 
-| Properties                      | Values                      |
-| ------------------------------- | --------------------------- |
-| Application type                | Traditional Web Application |
-| Options for sign-in identifiers | Email                       |
-| Self-registration               | Enabled                     |
-| Required attributes for sign-up | email                       |
-| Add a return URL                | http://localhost:5173       |
+| Properties                      | Values                  |
+| ------------------------------- | ----------------------- |
+| Application type                | Single Page Application |
+| Options for sign-in identifiers | Email                   |
+| Self-registration               | Enabled                 |
+| Required attributes for sign-up | email                   |
+| Add a return URL                | http://localhost:5173   |
 
 ---
 
@@ -47,8 +49,6 @@ Navigate to **S3** and _Create bucket_.
 | Encryption type         | Server-side encryption with Amazon S3 managed keys (SSE-S3) |
 | Bucket key              | Enabled                                                     |
 
----
-
 - Second bucket to store user receipts:
 
 | Properties              | Values                                                      |
@@ -59,8 +59,6 @@ Navigate to **S3** and _Create bucket_.
 | Bucket Versioning       | Enabled                                                     |
 | Encryption type         | Server-side encryption with Amazon S3 managed keys (SSE-S3) |
 | Bucket key              | Enabled                                                     |
-
----
 
 Inside the second buket generate the following folder structure:
 
@@ -83,8 +81,6 @@ The create a lifecycle rule, navigate to **w-rs-bk-receipts** -> **Management**,
 | Encryption type                                                      | Server-side encryption with Amazon S3 managed keys (SSE-S3) |
 | Bucket key                                                           | Enabled                                                     |
 
----
-
 Finally add the following CORS configuration, navigate to **w-rs-bk-receipts** -> **Permissions** -> **CORS**, and _Edit_.
 
 ```
@@ -106,5 +102,22 @@ Finally add the following CORS configuration, navigate to **w-rs-bk-receipts** -
   }
 ]
 ```
+
+---
+
+### CloudFront
+
+Navigate to **CloudFront** and _Create distribution_.
+
+| Properties                                   | Values                             |
+| -------------------------------------------- | ---------------------------------- |
+| Distribution name                            | w-rs-distribution                  |
+| Distribution type                            | Single website or app              |
+| Origin type                                  | S3                                 |
+| S3 origin                                    | w-rs-bk-frontend                   |
+| Allow private S3 bucket access to CloudFront | Enabled                            |
+| Origin settings                              | Enabled                            |
+| Cache settings                               | Enabled                            |
+| Web Application Firewall                     | Do not enable security protections |
 
 ---
