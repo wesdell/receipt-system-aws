@@ -11,6 +11,8 @@ This is an application where users their receipts and get a detailed breakdown o
   - [Amazon Cognito](#amazon-cognito)
   - [S3](#s3)
   - [CloudFront](#cloudfront)
+  - [Amazon RDS](#amazon-rds)
+  - [AWS Secrets Manager](#aws-secrets-manager)
 
 ## How to run this project
 
@@ -143,3 +145,31 @@ Then, navigate to **Error pages** and _Create custom error response_.
 | HTTP Response code        | 200: OK        |
 
 ---
+
+### Amazon RDS
+
+Navigate to **Aurora and RDS** -> **Databases**, and _Create database_.
+
+| Properties               | Values                         |
+| ------------------------ | ------------------------------ |
+| Engine options           | Aurora (PostgreSQL Compatible) |
+| Database creation method | Express configuration          |
+| DB engine version        | 17                             |
+| DB cluster identifier    | w-rs-db                        |
+| Min capacity value       | 1 ACU                          |
+| Database master username | wrsadmin                       |
+| Credentials management   | Self managed                   |
+| Master password          | adminwrs                       |
+
+### AWS Secrets Manager
+
+Go to **Secrets Manager** and _Store a new secret_.
+
+| Properties                   | Values                              |
+| ---------------------------- | ----------------------------------- |
+| Secret type                  | Credentials for Amazon RDS database |
+| Username                     | wrsadmin                            |
+| Password                     | adminwrs                            |
+| Database                     | w-rs-db                             |
+| Secret name                  | w-rs-dbsecret                       |
+| Configure automatic rotation | Disabled                            |
