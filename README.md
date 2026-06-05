@@ -120,4 +120,26 @@ Navigate to **CloudFront** and _Create distribution_.
 | Cache settings                               | Enabled                            |
 | Web Application Firewall                     | Do not enable security protections |
 
+Then, navigate to **Error pages** and _Create custom error response_.
+
+- First error response:
+
+| Properties                | Values         |
+| ------------------------- | -------------- |
+| HTTP error code           | 403: Forbidden |
+| Error caching minimum TTL | 10             |
+| Customize error response  | Yes            |
+| Response page path        | /index.html    |
+| HTTP Response code        | 200: OK        |
+
+- Second error response:
+
+| Properties                | Values         |
+| ------------------------- | -------------- |
+| HTTP error code           | 404: Not Found |
+| Error caching minimum TTL | 10             |
+| Customize error response  | Yes            |
+| Response page path        | /index.html    |
+| HTTP Response code        | 200: OK        |
+
 ---
