@@ -1,6 +1,21 @@
-.vscode/
+# Dependencies
+**/node_modules/
 
-node_modules/
+# TypeScript
+**/*.js
+**/*.d.ts
+!jest.config.js
 
+# Build outputs
+dist/
+coverage/
+
+# AWS CDK
+**/.cdk.staging/
+**/cdk.out/
+
+# Logs
 *.log
-pnpm-debug.log*
+
+# VS Code
+.vscode/
