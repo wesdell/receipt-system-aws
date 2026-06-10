@@ -14,5 +14,11 @@ interface ApiStackProps extends cdk.StackProps {
 export class ApiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
+
+    // Avoid TS "unused variables" error
+    void props.userPool;
+    void props.userPoolClient;
+    void props.receiptsBucket;
+    void props.dbSecret;
   }
 }
