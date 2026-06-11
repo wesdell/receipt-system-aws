@@ -13,6 +13,7 @@ coverage/
 # AWS CDK
 **/.cdk.staging/
 **/cdk.out/
+cdk.context.json
 
 # Logs
 *.log
