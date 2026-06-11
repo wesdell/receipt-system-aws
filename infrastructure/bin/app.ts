@@ -19,6 +19,8 @@ const api = new ApiStack(app, 'ReceiptSystemApi', {
   userPoolClient: foundation.userPoolClient,
   receiptsBucket: foundation.receiptsBucket,
   dbSecret: database.dbSecret,
+  dbInstance: database.dbInstance,
+  lambdaSecurityGroup: database.lambdaSecurityGroup
 });
 
 // Deploy order
