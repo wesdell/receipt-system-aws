@@ -1,0 +1,8 @@
+export const uploadURLHandler = async (event: any) => {
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: "Upload URL works"
+    })
+  };
+};
