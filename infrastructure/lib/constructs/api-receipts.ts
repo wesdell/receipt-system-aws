@@ -1,5 +1,6 @@
 import * as path from "path";
 
+import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as nodejs from "aws-cdk-lib/aws-lambda-nodejs";
@@ -58,6 +59,7 @@ export class ReceiptApiLambda extends Construct {
 
         vpc: props.vpc,
         allowPublicSubnet: true,
+        timeout: cdk.Duration.seconds(30),
 
         securityGroups: [
           props.securityGroup
