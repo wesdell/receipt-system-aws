@@ -1,4 +1,5 @@
-import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as path from "path";
+
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as nodejs from "aws-cdk-lib/aws-lambda-nodejs";
@@ -15,10 +16,6 @@ export class ReceiptApiLambda extends Construct {
     props: ReceiptApiLambdaProps
   ) {
     super(scope, id);
-
-    const vpc = ec2.Vpc.fromLookup(this, "DefaultVpc", {
-      isDefault: true
-    });
 
     const role = new iam.Role(this, "Role", {
       assumedBy: new iam.ServicePrincipal(
@@ -52,15 +49,15 @@ export class ReceiptApiLambda extends Construct {
         functionName:
           "w-rs-fn-receipt-api",
 
-        entry:
-          "../../lambdas/api-receipts.ts",
+        entry: path.join(__dirname, "../../lambdas/api-receipts.ts"),
 
         runtime:
           lambda.Runtime.NODEJS_20_X,
 
         role,
 
-        vpc,
+        vpc: props.vpc,
+        allowPublicSubnet: true,
 
         securityGroups: [
           props.securityGroup

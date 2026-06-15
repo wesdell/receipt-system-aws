@@ -12,4 +12,5 @@ export interface ApiStackProps extends cdk.StackProps {
   dbSecret: secretsmanager.ISecret;
   dbInstance: rds.DatabaseInstance;
   lambdaSecurityGroup: ec2.SecurityGroup;
+  vpc: ec2.IVpc
 }

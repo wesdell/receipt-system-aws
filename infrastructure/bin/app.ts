@@ -20,8 +20,10 @@ const api = new ApiStack(app, 'ReceiptSystemApi', {
   receiptsBucket: foundation.receiptsBucket,
   dbSecret: database.dbSecret,
   dbInstance: database.dbInstance,
-  lambdaSecurityGroup: database.lambdaSecurityGroup
+  lambdaSecurityGroup: database.lambdaSecurityGroup,
+  vpc: database.vpc
 });
 
 // Deploy order
 database.addDependency(foundation);
+api.addDependency(database);

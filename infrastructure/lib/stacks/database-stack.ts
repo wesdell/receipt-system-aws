@@ -8,25 +8,26 @@ export class DatabaseStack extends cdk.Stack {
   public readonly dbSecret: secretsmanager.ISecret;
   public readonly dbInstance: rds.DatabaseInstance;
   public readonly lambdaSecurityGroup: ec2.SecurityGroup;
+  public readonly vpc: ec2.IVpc;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const vpc = ec2.Vpc.fromLookup(this, "DefaultVps", {
+    this.vpc = ec2.Vpc.fromLookup(this, "DefaultVpc", {
       isDefault: true
     });
 
     this.lambdaSecurityGroup = new ec2.SecurityGroup(this, "LambdaSecurityGroup", {
       securityGroupName: "w-rs-lambda-sg",
       description: "Attached to all w-rs lambda funcitons",
-      vpc,
+      vpc: this.vpc,
       allowAllOutbound: true
     });
 
     const dbSecurityGorup = new ec2.SecurityGroup(this, "DBSecurityGroup", {
       securityGroupName: "w-rs-db-sg",
       description: "Control access to the Aurora cluster",
-      vpc,
+      vpc: this.vpc,
       allowAllOutbound: false
     });
 
@@ -65,7 +66,7 @@ export class DatabaseStack extends cdk.Stack {
       allocatedStorage: 20,
       publiclyAccessible: false,
 
-      vpc,
+      vpc: this.vpc,
       vpcSubnets: {
         subnetType: ec2.SubnetType.PUBLIC
       },

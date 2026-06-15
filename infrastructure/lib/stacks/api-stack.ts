@@ -12,13 +12,15 @@ export class ApiStack extends cdk.Stack {
 
     const uploadLambda = new UploadLambda(this, "UploadLambdaURL", {
       bucket: props.receiptsBucket,
-      securityGroup: props.lambdaSecurityGroup
+      securityGroup: props.lambdaSecurityGroup,
+      vpc: props.vpc
     });
 
     const receiptLambda = new ReceiptApiLambda(this, "ReceiptAPILambda", {
       dbSecret: props.dbSecret,
       dbInstance: props.dbInstance,
-      securityGroup: props.lambdaSecurityGroup
+      securityGroup: props.lambdaSecurityGroup,
+      vpc: props.vpc
     });
 
     const api = new HttpApiConstruct(this, "HttpApi", {
@@ -29,5 +31,13 @@ export class ApiStack extends cdk.Stack {
     });
 
     this.apiURL = api.apiUrl;
+
+    //Outputs
+    new cdk.CfnOutput(this, "ApiUrl", {
+      value: api.apiUrl,
+      description: "HTTP API URL",
+      exportName: "ReceiptSystem-ApiUrl",
+    });
+
   }
 }
