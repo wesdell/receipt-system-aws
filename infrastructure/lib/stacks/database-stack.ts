@@ -80,6 +80,19 @@ export class DatabaseStack extends cdk.Stack {
       deleteAutomatedBackups: true
     });
 
+    const endpoint = this.vpc.addInterfaceEndpoint(
+      "SecretsManagerEndpoint",
+      {
+        service:
+          ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER
+      }
+    );
+
+    endpoint.connections.allowDefaultPortFrom(
+      this.lambdaSecurityGroup,
+      "Allow Lambda to access Secrets Manager"
+    );
+
     // Outputs
     new cdk.CfnOutput(this, 'DbSecretArn', {
       value: this.dbSecret.secretArn,
