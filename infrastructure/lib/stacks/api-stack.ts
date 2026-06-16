@@ -11,9 +11,7 @@ export class ApiStack extends cdk.Stack {
     super(scope, id, props);
 
     const uploadLambda = new UploadLambda(this, "UploadLambdaURL", {
-      bucket: props.receiptsBucket,
-      securityGroup: props.lambdaSecurityGroup,
-      vpc: props.vpc
+      bucket: props.receiptsBucket
     });
 
     const receiptLambda = new ReceiptApiLambda(this, "ReceiptAPILambda", {

@@ -24,9 +24,6 @@ export class UploadLambda extends Construct {
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName(
           "service-role/AWSLambdaBasicExecutionRole"
-        ),
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
-          "service-role/AWSLambdaVPCAccessExecutionRole"
         )
       ]
     });
@@ -49,11 +46,6 @@ export class UploadLambda extends Construct {
         runtime:
           lambda.Runtime.NODEJS_20_X,
         role,
-        vpc: props.vpc,
-        allowPublicSubnet: true,
-        securityGroups: [
-          props.securityGroup
-        ],
         environment: {
           RECEIPTS_BUCKET:
             props.bucket.bucketName

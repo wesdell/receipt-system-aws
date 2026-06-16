@@ -103,7 +103,7 @@ export class FoundationStack extends cdk.Stack {
         ],
         allowedHeaders: ["*"],
         exposedHeaders: ["ETag"],
-        maxAge: 3000 // 3sec
+        maxAge: 30 // 30sec
       }],
 
       removalPolicy: cdk.RemovalPolicy.DESTROY,
